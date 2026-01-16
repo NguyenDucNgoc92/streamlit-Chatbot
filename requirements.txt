@@ -1,2 +1,5 @@
 streamlit
 speedtest-cli
+pandas
+kagglehub
+plotly
