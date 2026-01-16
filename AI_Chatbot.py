@@ -34,7 +34,7 @@ if prompt := st.chat_input("Hỏi tôi bất cứ điều gì..."):
         full_response = ""
         
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json"
         }
         payload = {
@@ -72,4 +72,5 @@ if prompt := st.chat_input("Hỏi tôi bất cứ điều gì..."):
             
         except Exception as e:
             st.error(f"Đã xảy ra lỗi kết nối: {str(e)}")
+
 
