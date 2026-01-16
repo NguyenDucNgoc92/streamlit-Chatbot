@@ -11,10 +11,6 @@ st.markdown("Cung cấp bởi mô hình **Llama 3.3 (Groq)**")
 # Ưu tiên lấy từ Secrets (khi chạy online) hoặc nhập tay (khi chạy local)
 if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["GROQ_API_KEY"]
-else:
-    with st.sidebar:
-        api_key = st.text_input("Nhập Groq API Key:", type="password")
-        st.info("Lấy key miễn phí tại: https://console.groq.com/keys")
 
 # --- KHỞI TẠO LỊCH SỬ CHAT ---
 if "messages" not in st.session_state:
@@ -78,3 +74,4 @@ if prompt := st.chat_input("Hỏi tôi bất cứ điều gì..."):
             except Exception as e:
 
                 st.error(f"Đã xảy ra lỗi: {str(e)}")
+
