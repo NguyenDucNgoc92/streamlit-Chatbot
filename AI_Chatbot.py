@@ -11,9 +11,6 @@ st.markdown("Cung cấp bởi mô hình **Llama 3.3 (Groq)**")
 # Kiểm tra xem Key có tồn tại trong Secrets không
 if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["GROQ_API_KEY"]
-else:
-    st.error("❌ Không tìm thấy 'GROQ_API_KEY' trong phần Secrets của App!")
-    st.stop() # Dừng app nếu không có Key
 
 # --- KHỞI TẠO LỊCH SỬ CHAT ---
 if "messages" not in st.session_state:
@@ -75,3 +72,4 @@ if prompt := st.chat_input("Hỏi tôi bất cứ điều gì..."):
             
         except Exception as e:
             st.error(f"Đã xảy ra lỗi kết nối: {str(e)}")
+
