@@ -4,3 +4,4 @@ pandas
 kagglehub
 plotly
 openpyxl
+requests
