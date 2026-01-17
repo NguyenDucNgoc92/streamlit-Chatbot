@@ -152,12 +152,12 @@ else:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-# --- 5. THANH NHẬP LIỆU ---
+# --- 5. XỬ LÝ NHẬP LIỆU & API ---
 if prompt := st.chat_input("Nhập câu hỏi tại đây..."):
     current_messages.append({"role": "user", "content": prompt})
     st.rerun()
 
-# Logic API Groq
+# Logic phản hồi (Chỉ chạy khi tin nhắn cuối cùng là của User)
 if current_messages and current_messages[-1]["role"] == "user":
     with st.chat_message("assistant"):
         placeholder = st.empty()
@@ -167,18 +167,35 @@ if current_messages and current_messages[-1]["role"] == "user":
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {st.secrets['GROQ_API_KEY']}"},
                 json={"model": "llama-3.3-70b-versatile", "messages": current_messages, "stream": True},
-                stream=True
+                stream=True,
+                timeout=20
             )
             for line in res.iter_lines():
                 if line:
                     line_text = line.decode("utf-8")
-                    if "data: " in line_text and "[DONE]" not in line_text:
-                        delta = json.loads(line_text[6:])["choices"][0]["delta"].get("content", "")
+                    if line_text.startswith("data: "):
+                        data_str = line_text[6:]
+                        if data_str == "[DONE]": break
+                        delta = json.loads(data_str)["choices"][0]["delta"].get("content", "")
                         full_res += delta
                         placeholder.markdown(full_res + " ▌")
+            
             placeholder.markdown(full_res)
             current_messages.append({"role": "assistant", "content": full_res})
+            st.session_state.chat_sessions[st.session_state.current_session] = current_messages
+            st.rerun() # Rerun để hiện nút gợi ý mà không chạy lại API
+        except Exception as e:
+            st.error(f"⚠️ Lỗi kết nối: {str(e)}")
+
+# --- 6. GỢI Ý SAU CÂU TRẢ LỜI (FOLLOW-UP) ---
+# Chỉ hiện khi tin nhắn cuối cùng là của Assistant
+if current_messages and current_messages[-1]["role"] == "assistant":
+    st.write("") # Tạo khoảng cách
+    st.caption("Gợi ý cho bạn:")
+    f_cols = st.columns(3)
+    follow_ups = ["Giải thích rõ hơn", "Cho ví dụ cụ thể", "Tóm tắt ý chính"]
+    for i, f_text in enumerate(follow_ups):
+        if f_cols[i].button(f"🔍 {f_text}", key=f"fup_{i}", use_container_width=True):
+            current_messages.append({"role": "user", "content": f_text})
             st.rerun()
-        except:
-            st.error("Lỗi kết nối API.")
 
