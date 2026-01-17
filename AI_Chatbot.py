@@ -74,7 +74,7 @@ if "agreed" not in st.session_state:
 @st.dialog("⚠️ QUY ĐỊNH SỬ DỤNG")
 def show_terms():
     st.markdown("""
-    Chào mừng bạn đến với mô phỏng AI. Vui lòng lưu ý:
+    Chào mừng bạn đến với NDN Chatbot. Vui lòng lưu ý:
     * **KHÔNG CHIA SẺ DỮ LIỆU CÁ NHÂN** (mật khẩu, số thẻ, thông tin riêng tư...).
     * Dùng cho mục đích **trải nghiệm mô phỏng, học tập**.
     * Không yêu cầu thanh toán dưới mọi hình thức.
@@ -181,3 +181,4 @@ if current_messages and current_messages[-1]["role"] == "user":
             st.rerun()
         except:
             st.error("Lỗi kết nối API.")
+
