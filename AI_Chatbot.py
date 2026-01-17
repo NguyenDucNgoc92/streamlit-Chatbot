@@ -22,6 +22,12 @@ st.markdown("""
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         text-align: center; margin-top: 5vh;
     }
+    .sidebar-title {
+        font-size: 3.5rem; font-weight: 300;
+        background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB, #D96570);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-align: center; margin-top: 5vh;
+    }
     .footer-text { text-align: center; margin-bottom: 2rem; }
     .footer-text a { color: #5f6368; text-decoration: none; font-weight: 500; }
 
@@ -72,7 +78,7 @@ if not st.session_state.agreed:
 # --- 2. SIDEBAR ---
 with st.sidebar:
     st.markdown(f'<img src="https://ui-avatars.com/api/?name=Ngọc&background=4285F4&color=fff" class="sidebar-avatar">', unsafe_allow_html=True)
-    st.markdown('<div class="main-title">NDN AI ASSISTANT</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-title">NDN AI ASSISTANT</div>', unsafe_allow_html=True)
     st.markdown('<div class="footer-text"><a href="https://nguyenducngoc.vn/" target="_blank">Một sản phẩm của Nguyễn Đức Ngọc | 1- 2026</a></div>', unsafe_allow_html=True)
     
     if st.button("➕ Cuộc trò chuyện mới", use_container_width=True):
@@ -160,4 +166,5 @@ if current_messages and current_messages[-1]["role"] == "assistant":
         if follow_cols[i].button(f"🔍 {f_text}", key=f"follow_{i}"):
             current_messages.append({"role": "user", "content": f_text})
             st.rerun()
+
 
