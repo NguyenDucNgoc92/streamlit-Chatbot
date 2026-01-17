@@ -2,48 +2,62 @@ import streamlit as st
 import requests
 import json
 
-# --- CẤU HÌNH TRANG ---
-st.set_page_config(page_title="NDN AI Pro", page_icon="🤖", layout="wide")
+# --- 1. CẤU HÌNH TRANG ---
+st.set_page_config(
+    page_title="NDN AI Pro", 
+    page_icon="🤖", 
+    layout="wide",
+    initial_sidebar_state="expanded" 
+)
 
-# --- CSS CUSTOM (UI/UX NÂNG CAO) ---
+# --- CSS CUSTOM (UI CHUẨN GEMINI & FIX LINK) ---
 st.markdown("""
 <style>
-    /* Ẩn Header mặc định của Streamlit để giống App hơn */
-    header {visibility: hidden;}
+    header[data-testid="stHeader"] {
+        background: rgba(0,0,0,0);
+    }
     
-    /* Hiệu ứng Fade In */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .stChatMessage { animation: fadeIn 0.5s ease-out; }
-
-    /* Tiêu đề & Footer */
     .main-title {
-        font-size: 3.5rem; font-weight: 800;
+        font-size: 3.5rem; font-weight: 600;
         background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB, #D96570);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         text-align: center; margin-top: 5vh;
+        font-family: 'Google Sans', sans-serif;
     }
-    .sidebar-title {
-        font-size: 3.5rem; font-weight: 300;
-        background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB, #D96570);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        text-align: center; margin-top: 5vh;
+    
+    /* Style cho link không bị đổi màu xanh */
+    .footer-link {
+        text-decoration: none;
+        color: #666 !important;
+        transition: 0.3s;
     }
-    .footer-text { text-align: center; margin-bottom: 2rem; }
-    .footer-text a { color: #5f6368; text-decoration: none; font-weight: 500; }
+    .footer-link:hover {
+        color: #4285F4 !important;
+    }
 
-    /* Thẻ gợi ý (Gemini Style) */
-    .suggestion-card {
-        background: #f0f4f9; border-radius: 16px; padding: 20px;
-        cursor: pointer; transition: 0.3s; border: none; text-align: left;
-        height: 100%; display: flex; align-items: flex-end;
+    .footer-text {
+        text-align: center; font-size: 0.9rem; margin-bottom: 30px;
     }
-    .suggestion-card:hover { background: #e3e8ef; }
+
+    /* Thẻ gợi ý trắng */
+    div[data-testid="stColumn"] button {
+        background-color: white !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        height: 120px !important;
+        color: #3c4043 !important;
+    }
 
     /* Avatar Sidebar */
+    .sidebar-avatar-container {
+        display: flex; justify-content: center; margin-bottom: 20px;
+    }
     .sidebar-avatar {
-        display: block; margin: 0 auto 10px auto;
         width: 80px; height: 80px; border-radius: 50%;
-        border: 2px solid #9B72CB;
+        background: #4285F4; color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 30px; font-weight: bold; border: 2px solid #e0e0e0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -56,7 +70,7 @@ if "current_session" not in st.session_state:
 if "agreed" not in st.session_state:
     st.session_state.agreed = False
 
-# --- 1. MODAL ĐIỀU KHOẢN ---
+# --- 2. MODAL ĐIỀU KHOẢN ---
 @st.dialog("⚠️ QUY ĐỊNH SỬ DỤNG")
 def show_terms():
     st.markdown("""
@@ -75,11 +89,16 @@ if not st.session_state.agreed:
     show_terms()
     st.stop()
 
-# --- 2. SIDEBAR ---
+# --- 3. SIDEBAR (CẬP NHẬT LINK) ---
 with st.sidebar:
-    st.markdown(f'<img src="https://ui-avatars.com/api/?name=Ngọc&background=4285F4&color=fff" class="sidebar-avatar">', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-title">NDN AI ASSISTANT</div>', unsafe_allow_html=True)
-    st.markdown('<div class="footer-text"><a href="https://nguyenducngoc.vn/" target="_blank">Một sản phẩm của Nguyễn Đức Ngọc | 1- 2026</a></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-avatar-container"><div class="sidebar-avatar">NDN</div></div>', unsafe_allow_html=True)
+    
+    st.markdown(f"""<div style="text-align:center;">
+        <h2 style="background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; margin-bottom:0;">NDN AI ASSISTANT</h2>
+        <p style="font-size:0.8rem;">
+            <a href="https://nguyenducngoc.vn/" target="_blank" class="footer-link">Một sản phẩm của Nguyễn Đức Ngọc | 1- 2026</a>
+        </p>
+    </div>""", unsafe_allow_html=True)
     
     if st.button("➕ Cuộc trò chuyện mới", use_container_width=True):
         new_id = f"Phiên chat {len(st.session_state.chat_sessions) + 1}"
@@ -89,20 +108,28 @@ with st.sidebar:
     
     st.divider()
     for session_name in list(st.session_state.chat_sessions.keys()):
-        if st.button(f"💬 {session_name}", key=session_name, use_container_width=True):
+        is_active = (session_name == st.session_state.current_session)
+        if st.button(f"💬 {session_name}", key=f"side_{session_name}", use_container_width=True, type="secondary" if not is_active else "primary"):
             st.session_state.current_session = session_name
             st.rerun()
 
-# --- 3. GIAO DIỆN CHÍNH ---
+# --- 4. GIAO DIỆN CHÍNH ---
 current_messages = st.session_state.chat_sessions[st.session_state.current_session]
 
+# Hàm hiển thị Header chung cho cả màn hình trống và màn hình chat
+def display_common_header():
+    st.markdown(f"""
+    <div style="text-align: center; margin-top: 10px;">
+        <p style="font-size:0.9rem;">
+            <a href="https://nguyenducngoc.vn/" target="_blank" class="footer-link">Một sản phẩm của Nguyễn Đức Ngọc | 1- 2026</a>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
 if not current_messages:
-    # HIỂN THỊ KHI CHƯA CÓ TIN NHẮN (GIỐNG ẢNH BẠN GỬI)
-    st.markdown('<div class="main-title">Hi Ngọc, <br>Where should we start?</div>', unsafe_allow_html=True)
-    st.markdown('<div class="footer-text"><a href="https://nguyenducngoc.vn/" target="_blank">Một sản phẩm của Nguyễn Đức Ngọc | 1- 2026</a></div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">Hi Ngọc,<br>Where should we start?</div>', unsafe_allow_html=True)
+    display_common_header()
     
-    # Grid gợi ý
-    cols = st.columns(4)
     suggestions = [
         {"icon": "🎨", "text": "Tạo hình ảnh về thành phố tương lai"},
         {"icon": "💡", "text": "Lên ý tưởng học lập trình Python"},
@@ -110,26 +137,27 @@ if not current_messages:
         {"icon": "🚀", "text": "Tối ưu hóa hiệu suất làm việc"}
     ]
     
-    for i, col in enumerate(cols):
-        with col:
-            if st.button(f"{suggestions[i]['icon']}\n\n{suggestions[i]['text']}", key=f"sug_{i}"):
-                current_messages.append({"role": "user", "content": suggestions[i]['text']})
+    cols = st.columns(4)
+    for i, sug in enumerate(suggestions):
+        with cols[i]:
+            if st.button(f"{sug['icon']}\n\n{sug['text']}", key=f"sug_{i}"):
+                current_messages.append({"role": "user", "content": sug['text']})
                 st.rerun()
 else:
-    # HIỂN THỊ LỊCH SỬ CHAT
-    st.markdown(f"### {st.session_state.current_session}")
-    for i, msg in enumerate(current_messages):
+    # Trong phiên chat cũng hiện dòng thông tin sản phẩm phía trên
+    st.caption(f"🚀 Phiên làm việc: {st.session_state.current_session}")
+    display_common_header()
+    
+    for msg in current_messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-# --- 4. XỬ LÝ NHẬP LIỆU & GỢI Ý TIẾP THEO ---
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-
+# --- 5. THANH NHẬP LIỆU ---
 if prompt := st.chat_input("Nhập câu hỏi tại đây..."):
     current_messages.append({"role": "user", "content": prompt})
     st.rerun()
 
-# Logic phản hồi của AI
+# Logic API Groq
 if current_messages and current_messages[-1]["role"] == "user":
     with st.chat_message("assistant"):
         placeholder = st.empty()
@@ -137,7 +165,7 @@ if current_messages and current_messages[-1]["role"] == "user":
         try:
             res = requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                headers={"Authorization": f"Bearer {st.secrets['GROQ_API_KEY']}"},
                 json={"model": "llama-3.3-70b-versatile", "messages": current_messages, "stream": True},
                 stream=True
             )
@@ -148,23 +176,8 @@ if current_messages and current_messages[-1]["role"] == "user":
                         delta = json.loads(line_text[6:])["choices"][0]["delta"].get("content", "")
                         full_res += delta
                         placeholder.markdown(full_res + " ▌")
-            
             placeholder.markdown(full_res)
             current_messages.append({"role": "assistant", "content": full_res})
-            st.session_state.chat_sessions[st.session_state.current_session] = current_messages
             st.rerun()
         except:
             st.error("Lỗi kết nối API.")
-
-# --- GỢI Ý SAU CÂU TRẢ LỜI ---
-if current_messages and current_messages[-1]["role"] == "assistant":
-    st.markdown("---")
-    st.caption("Bạn có thể muốn hỏi thêm:")
-    follow_cols = st.columns(3)
-    follow_ups = ["Giải thích chi tiết hơn", "Cho tôi ví dụ cụ thể", "Tóm tắt lại ý chính"]
-    for i, f_text in enumerate(follow_ups):
-        if follow_cols[i].button(f"🔍 {f_text}", key=f"follow_{i}"):
-            current_messages.append({"role": "user", "content": f_text})
-            st.rerun()
-
-
