@@ -5,3 +5,4 @@ kagglehub
 plotly
 openpyxl
 requests
+groq
